@@ -1,0 +1,201 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+body {
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif, sans-serif;
+  line-height: 3.1;
+  background-color: #c2e0ff;
+  color: #333;
+  text-align: center;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #222;
+  color: #fff;
+  padding: 10px 30px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  animation: logo-slide 1s ease-out;
+  gap: 10px;
+}
+
+.nav-links a {
+  color: #fff;
+  margin: 0 15px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+  animation: logo-slide 2s ease-out;
+}
+
+.nav-links a:hover {
+  color: #ff9800;
+}
+
+.menu-toggle {
+  display: none;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* Main content */
+main {
+  padding: 50px 20px;
+}
+
+table {
+    border-collapse: collapse;
+    background: rgb(255, 255, 255);
+    color: rgba(255, 0, 0, 0.473);
+    animation: logo-slide 0.5s ease-out;
+}
+th, td { 
+    font-weight: light;
+    animation: logo-slide 1s ease-out;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #ff9800;
+  border: none;
+  color: #fff;
+  border-radius: 5px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+/* Animations */
+button.button-animate:hover {
+  transform: scale(1.1);
+  background-color: #ff0000;
+}
+
+.fade-in {
+  animation: fadeIn 2s ease forwards;
+}
+
+.slide-in {
+  animation: slideIn 1.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideIn {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes logo-slide {
+  0% { transform: translateX(-50px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Section styling */
+section {
+  padding: 100px 20px;
+  min-height: 100vh;
+  background: #f0f4f8;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Fade-in section animation */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.fade-in-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Footer */
+footer {
+  background: #222;
+  color: #fff;
+  padding: 10px 0;
+  position: relative;
+  margin-top: 50px;
+}
+
+/* Responsive Navigation */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    background: #333;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 150px;
+  }
+
+  .nav-links a {
+    margin: 10px 0;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+}
+/* Calendar cells clickable */
+td {
+  position: relative;
+  cursor: pointer;
+  vertical-align: top;
+  padding: 10px 8px;
+}
+.logo-img {
+  max-width: 50px;
+  width: auto;
+}
+/* Date number styling inside the cell */
+.date-number {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 6px;
+  color: #800080;
+}
+
+/* Entries text inside each cell */
+.entries {
+  margin-top: 5px;
+  font-size: 0.85em;
+  color: #003366;
+  white-space: pre-wrap;
+  min-height: 20px;
+}
+
+/* Optional hover effect on dates */
+td:hover {
+  background-color: #ffe0b2;
+  transition: background-color 0.3s ease;
+}

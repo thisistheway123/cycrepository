@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ts website</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav class="nav-bar">
+      <h2 class="logo">
+        <img src="cyclogo (1) (1).png" alt="logo" class="logo-img">
+      </h2>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="calendar.html">Calendar</a>
+      </div>
+      <div id="clock-header" style="margin-left:auto; font-size:1.3em; font-weight:bold; color:#fff; background:#333; border-radius:8px; padding:6px 18px; min-width:110px; text-align:center;"></div>
+      <div class="menu-toggle">☰</div>
+    </nav>
+  </header>
+
+  <main>
+    <h1 class="fade-in">ts website so tuff</h1>
+    <p class="slide-in">ts website so peak</p>
+    <p class="slide-in">scrolling n shi</p>
+    <button id="clickMe" class="button-animate">ts red button is so peak</button>
+  </main>
+
+  <script>
+    function updateClockHeader() {
+      const now = new Date();
+      let h = now.getHours().toString().padStart(2, '0');
+      let m = now.getMinutes().toString().padStart(2, '0');
+      let s = now.getSeconds().toString().padStart(2, '0');
+      document.getElementById('clock-header').textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(updateClockHeader, 1000);
+    updateClockHeader();
+  </script>
+  <footer>
+    <p>© 2025 ts website so peak</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
