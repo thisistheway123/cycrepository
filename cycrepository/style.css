@@ -1,14 +1,14 @@
 /* Reset */
 * {
-  margin: 0;
-  padding: 0;
+  margin: 10;
+  padding: 10;
   box-sizing: border-box;
 }
 
 body {
-  font-family: Arial, sans-serif;
-  line-height: 1.6;
-  background-color: #f0f4f8;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif, sans-serif;
+  line-height: 3.1;
+  background-color: #c2e0ff;
   color: #333;
   text-align: center;
 }
@@ -38,6 +38,7 @@ body {
   text-decoration: none;
   font-weight: bold;
   transition: color 0.3s ease;
+  animation: logo-slide 2s ease-out;
 }
 
 .nav-links a:hover {
@@ -55,18 +56,17 @@ main {
   padding: 50px 20px;
 }
 
-<<<<<<< HEAD
-=======
 table {
     border-collapse: collapse;
     background: rgb(255, 255, 255);
     color: rgba(255, 0, 0, 0.473);
+    animation: logo-slide 0.5s ease-out;
 }
 th, td { 
     font-weight: light;
+    animation: logo-slide 1s ease-out;
 }
 
->>>>>>> origin/master
 button {
   padding: 10px 20px;
   font-size: 16px;
