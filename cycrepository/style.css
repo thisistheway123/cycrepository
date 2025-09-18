@@ -55,6 +55,18 @@ main {
   padding: 50px 20px;
 }
 
+<<<<<<< HEAD
+=======
+table {
+    border-collapse: collapse;
+    background: rgb(255, 255, 255);
+    color: rgba(255, 0, 0, 0.473);
+}
+th, td { 
+    font-weight: light;
+}
+
+>>>>>>> origin/master
 button {
   padding: 10px 20px;
   font-size: 16px;
