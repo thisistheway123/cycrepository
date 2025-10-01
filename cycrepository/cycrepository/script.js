@@ -3,13 +3,32 @@ document.getElementById('clickMe')?.addEventListener('click', () => {
   alert('ts animations so peak');
 });
 
-// Responsive menu toggle
+// Responsive menu toggle (accessible)
 const menuToggle = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('.nav-links');
+if (menuToggle && navLinks) {
+  menuToggle.addEventListener('click', () => {
+    const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
+    menuToggle.setAttribute('aria-expanded', (!expanded).toString());
+    navLinks.classList.toggle('active');
+  });
 
-menuToggle.addEventListener('click', () => {
-  navLinks.classList.toggle('active');
-});
+  // Close menu on outside click
+  document.addEventListener('click', (e) => {
+    if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+      navLinks.classList.remove('active');
+      menuToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      navLinks.classList.remove('active');
+      menuToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
 
 // Fade-in sections on scroll
 const sections = document.querySelectorAll('.fade-in-section');

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cyc - September 2025 Calendar</title>
-  <style> /* ts is in css */
+  <style>
     .past-day {
       background: #e0e0e0 !important;
       color: #aaa !important;
@@ -154,6 +154,13 @@
       min-height: 20px;
     }
 
+    /* Predicted period highlight */
+    .predicted-period {
+      background: rgba(255, 200, 200, 0.9) !important;
+      color: #7a0000 !important;
+      border: 2px solid #ff8a80 !important;
+    }
+
     /* Animations */
     @keyframes logo-slide {
       0% {
@@ -195,11 +202,12 @@
       <img src="cyclogo (1) (1).png" alt="  ts Logo" class="logo-img">
       </div>
       <div class="nav-links">
-        <a href="index.html">ts home</a>
-        <a href="about.html">ts about</a>
-        <a href="calendar.html">calendar</a>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="calendar.html">Calendar</a>
+        <a href="index.html?editSurvey=1" title="Edit your menstrual survey">Edit Survey</a>
       </div>
-      <div id="clock-header" style="margin-left:auto; font-size:1.3em; font-weight:bold; color:#fff; background:#333; border-radius:8px; padding:6px 18px; min-width:110px; text-align:center;"></div>
+      <div id="clock-header" style="margin-left:auto; font-size:1.3em; font-weight:bold; color:#fff; background:#333; border-radius:8px; padding:10px 30px; min-width:100px; text-align:center;"></div>
       <div class="menu-toggle">☰</div>
     </nav>
   </header>
@@ -224,7 +232,7 @@
   </script>
   <footer>
 
-    <div>© 2025 ts website. All rights reserved.</div>
+    <div>© 2025 Cyc. All rights reserved.</div>
   </footer>
   <div id="eventModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; padding:24px; border-radius:8px; min-width:300px; max-width:90vw; margin:auto; position:relative;">
@@ -237,7 +245,7 @@
     </div>
   </div>
   <script>
-    // Unified calendar renderer with month switching
+    // Calendar logic
     const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const today = new Date();
     let viewMonth = today.getMonth();
@@ -259,6 +267,22 @@
       calendarTitle.textContent = `${monthNames[month]} ${year}`;
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      // Load menstrual data (if any) from localStorage
+      let menstrualData = null;
+      try { menstrualData = JSON.parse(localStorage.getItem('menstrualData') || 'null'); } catch(e) { menstrualData = null; }
+      const msPerDay = 24*60*60*1000;
+      function isPredictedPeriod(dateObj) {
+        if (!menstrualData || !menstrualData.lastStart) return false;
+        const cycle = parseInt(menstrualData.cycleLength,10) || 28;
+        const period = parseInt(menstrualData.periodLength,10) || 5;
+        const last = new Date(menstrualData.lastStart + 'T00:00:00');
+        // days difference
+        const diff = Math.floor((dateObj - last) / msPerDay);
+        // compute mod positive
+        const mod = ((diff % cycle) + cycle) % cycle;
+        return mod >= 0 && mod < period;
+      }
 
       const table = document.createElement('table');
       table.setAttribute('bgcolor','lightgrey');
@@ -290,7 +314,11 @@
             cell.appendChild(dateDiv);
             cell.appendChild(entriesDiv);
 
-            // Past vs today vs future
+            // mark past days
+            const cellDateObj = new Date(year, month, date);
+            if (isPredictedPeriod(cellDateObj)) {
+              cell.classList.add('predicted-period');
+            }
             if (year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth()) || (year === today.getFullYear() && month === today.getMonth() && date < today.getDate())) {
               cell.classList.add('past-day');
             } else if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
@@ -309,7 +337,7 @@
       calendarContainer.innerHTML = '';
       calendarContainer.appendChild(table);
 
-      // wire cell clicks
+      // Add click listeners to cells
       calendarContainer.querySelectorAll('td').forEach(cell => {
         cell.addEventListener('click', () => {
           if (cell.classList.contains('past-day')) return;
@@ -337,7 +365,6 @@
       if (viewMonth > 11) { viewMonth = 0; viewYear++; }
       renderCalendar(viewMonth, viewYear);
     });
-
     saveBtn.addEventListener('click', () => {
       if (currentEntries) currentEntries.textContent = eventInput.value;
       modal.style.display = 'none';
