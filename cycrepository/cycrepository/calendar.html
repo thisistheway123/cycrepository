@@ -1,198 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cyc - September 2025 Calendar</title>
+  <title>Cyc - Calendar</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    .past-day {
-      background: #e0e0e0 !important;
-      color: #aaa !important;
-      cursor: not-allowed !important;
-    }
-    .today {
-      background: #fff59d !important;
-      color: #d32f2f !important;
-      border: 2px solid #fbc02d !important;
-    }
-    * {
-      margin: 0px;
-      padding: 0px;
-      box-sizing: border-box;
-    }
+    /* Calendar-specific overrides kept local */
+    .past-day { background: #e0e0e0 !important; color: #aaa !important; cursor: not-allowed !important; }
+  .today { background: #fff59d !important; color: #d32f2f !important; border: 2px solid #fbc02d !important; }
+  /* Only apply predicted-period visuals when the cell is NOT also today */
+  .predicted-period:not(.today) { background: rgba(255,200,200,0.9) !important; color: #7a0000 !important; border: 2px solid #ff8a80 !important; }
+    table { width: 90%; max-width: 800px; margin: 0 auto; }
+    th { background: purple; color: white; }
+    /* Animated calendar and cells */
+    .calendar-table { transform-origin: center top; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInFromRight { from { opacity:0; transform: translateX(18px); } to { opacity:1; transform: translateX(0);} }
+    @keyframes slideOutToLeft { from { opacity:1; transform: translateX(0);} to { opacity:0; transform: translateX(-18px);} }
+    @keyframes slideInFromLeft { from { opacity:0; transform: translateX(-18px); } to { opacity:1; transform: translateX(0);} }
+    @keyframes slideOutToRight { from { opacity:1; transform: translateX(0);} to { opacity:0; transform: translateX(18px);} }
 
-    body {
-      font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-      line-height: 3.1;
-      background-color: #c2e0ff;
-      color: #333;
-      text-align: center;
-    }
-    
-    /* Header & Navigation */
-    .nav-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #222;
-      color: #fff;
-      padding: 10px 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
+    .anim-in-right { animation: slideInFromRight 360ms cubic-bezier(.2,.9,.3,1) forwards; }
+    .anim-out-left { animation: slideOutToLeft 320ms cubic-bezier(.2,.9,.3,1) forwards; }
+    .anim-in-left { animation: slideInFromLeft 360ms cubic-bezier(.2,.9,.3,1) forwards; }
+    .anim-out-right { animation: slideOutToRight 320ms cubic-bezier(.2,.9,.3,1) forwards; }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      animation: logo-slide 1s ease-out;
-    }
-    .logo-img {
-    max-width: 50px;
-    height: auto;
-    display: block;
-    }
-    .nav-links a {
-      color: #fff;
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: color 0.3s ease;
-      animation: logo-slide 2s ease-out;
-    }
+    .date-cell { opacity: 0; transform: translateY(6px); }
+    @keyframes cellPop { to { opacity: 1; transform: none; } }
+    .date-cell.pop { animation: cellPop 360ms cubic-bezier(.2,.9,.3,1) forwards; }
 
-    .nav-links a:hover {
-      color: #ff9800;
-    }
-
-    .menu-toggle {
-      display: none;
-      font-size: 28px;
-      cursor: pointer;
-    }
-
-    /* Responsive Navigation */
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-        flex-direction: column;
-        background: #333;
-        position: absolute;
-        top: 50px;
-        right: 0;
-        width: 150px;
-      }
-
-      .nav-links.active {
-        display: flex;
-      }
-
-      .nav-links a {
-        margin: 10px 0;
-      }
-
-      .menu-toggle {
-        display: block;
-      }
-    }
-
-    /* Main content */
-    main {
-      padding: 50px 20px;
-    }
-
-    table {
-      border-collapse: collapse;
-      background: rgb(255, 255, 255);
-      color: rgba(255, 0, 0, 0.473);
-      margin: 0 auto;
-      animation: logo-slide 0.5s ease-out;
-      width: 90%;
-      max-width: 800px;
-    }
-
-    th,
-    td {
-      padding: 12px 8px;
-      font-weight: 400;
-      border: 1px solid #aaa;
-      animation: logo-slide 1s ease-out;
-      vertical-align: top;
-    }
-
-    th {
-      background: purple;
-      color: white;
-    }
-
-    /* Calendar cells clickable */
-    td {
-      cursor: pointer; /* shows pointer on hover */
-      vertical-align: top;
-      position: relative;
-      transition: background-color 0.3s ease;
-    }
-
-    td:hover {
-      background-color: #ffe0b2; /* soft highlight */
-    }
-
-    /* Date number styling */
-    .date-number {
-      font-weight: bold;
-      font-size: 1.1em;
-      margin-bottom: 6px;
-      color: #800080; /* purple */
-    }
-
-    /* Entries text */
-    .entries {
-      margin-top: 5px;
-      font-size: 0.85em;
-      color: #003366; /* dark blue */
-      white-space: pre-wrap; /* multiline */
-      min-height: 20px;
-    }
-
-    /* Predicted period highlight */
-    .predicted-period {
-      background: rgba(255, 200, 200, 0.9) !important;
-      color: #7a0000 !important;
-      border: 2px solid #ff8a80 !important;
-    }
-
-    /* Animations */
-    @keyframes logo-slide {
-      0% {
-        transform: translateX(-50px);
-        opacity: 0;
-      }
-      100% {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    /* Fade-in section animation */
-    .fade-in-section {
-      opacity: 0;
-      transform: translateY(50px);
-      transition: opacity 1s ease-out, transform 1s ease-out;
-    }
-
-    .fade-in-section.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Footer */
-    footer {
-      background: #222;
-      color: #fff;
-      padding: 10px 0;
-      position: relative;
-      margin-top: 50px;
-    }
+  /* Modal dialog animation */
+  /* hidden by default; .open shows it */
+  #eventModal { display: none; }
+  #eventModal.open { display: flex; }
+  #eventDialog { transform: translateY(8px) scale(0.98); opacity: 0; z-index:10001; }
+  @keyframes popIn {
+    0% { transform: translateY(12px) scale(0.98); opacity: 0; }
+    70% { transform: translateY(-6px) scale(1.02); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes popOut {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(8px) scale(0.98); opacity: 0; }
+  }
+  /* helper classes to trigger animations */
+  #eventDialog.animate-in { animation: popIn 320ms cubic-bezier(.2,.9,.3,1) forwards; }
+  #eventDialog.animate-out { animation: popOut 220ms ease forwards; }
+  /* Allow page scroll while modal is open by letting pointer-events pass through the backdrop.
+    Dialog itself remains interactive. Backdrop clicks will NOT close the modal (use Cancel/Escape).
+  */
+  #eventModal { pointer-events: none; }
+  #eventModal.open { pointer-events: none; }
+  #eventModal.open #eventDialog { pointer-events: auto; max-height: 80vh; overflow: auto; }
   </style>
 </head>
 <body>
@@ -234,8 +94,8 @@
 
     <div>© 2025 Cyc. All rights reserved.</div>
   </footer>
-  <div id="eventModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:24px; border-radius:8px; min-width:300px; max-width:90vw; margin:auto; position:relative;">
+  <div id="eventModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="eventDialog" style="background:#fff; padding:24px; border-radius:8px; min-width:300px; max-width:90vw; margin:auto; position:relative;">
       <h3 id="modalDate"></h3>
       <input id="eventInput" type="text" placeholder="Enter event..." style="width:100%; margin-bottom:10px; padding:6px;" />
       <input id="fileInput" type="file" accept=".txt" style="margin-bottom:10px;" />
@@ -245,7 +105,7 @@
     </div>
   </div>
   <script>
-    // Calendar logic
+    // Calendar logic with animated transitions
     const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const today = new Date();
     let viewMonth = today.getMonth();
@@ -255,6 +115,7 @@
     const calendarContainer = document.getElementById('calendarContainer');
 
     const modal = document.getElementById('eventModal');
+    const eventDialog = document.getElementById('eventDialog');
     const eventInput = document.getElementById('eventInput');
     const fileInput = document.getElementById('fileInput');
     const saveBtn = document.getElementById('saveEventBtn');
@@ -263,7 +124,8 @@
     let currentEntries = null;
     let currentDate = null;
 
-    function renderCalendar(month, year) {
+    // build a table element for the given month/year (doesn't attach)
+    function buildCalendar(month, year) {
       calendarTitle.textContent = `${monthNames[month]} ${year}`;
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -277,14 +139,13 @@
         const cycle = parseInt(menstrualData.cycleLength,10) || 28;
         const period = parseInt(menstrualData.periodLength,10) || 5;
         const last = new Date(menstrualData.lastStart + 'T00:00:00');
-        // days difference
         const diff = Math.floor((dateObj - last) / msPerDay);
-        // compute mod positive
         const mod = ((diff % cycle) + cycle) % cycle;
         return mod >= 0 && mod < period;
       }
 
       const table = document.createElement('table');
+      table.className = 'calendar-table';
       table.setAttribute('bgcolor','lightgrey');
       table.setAttribute('cellspacing','21');
       table.setAttribute('cellpadding','21');
@@ -297,12 +158,13 @@
 
       const tbody = document.createElement('tbody');
       let date = 1;
+      let seq = 0; // for staggering
       for (let i = 0; i < 6; i++) {
         const row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
           const cell = document.createElement('td');
           if (i === 0 && j < firstDay) {
-            // empty
+            // empty cell
           } else if (date > daysInMonth) {
             // empty
           } else {
@@ -314,16 +176,29 @@
             cell.appendChild(dateDiv);
             cell.appendChild(entriesDiv);
 
-            // mark past days
+            // mark predicted period
             const cellDateObj = new Date(year, month, date);
-            if (isPredictedPeriod(cellDateObj)) {
-              cell.classList.add('predicted-period');
-            }
+            if (isPredictedPeriod(cellDateObj)) cell.classList.add('predicted-period');
+
+            // mark past/today
             if (year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth()) || (year === today.getFullYear() && month === today.getMonth() && date < today.getDate())) {
               cell.classList.add('past-day');
             } else if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
               cell.classList.add('today');
             }
+
+            // animation: staggered pop using rAF to avoid piling up timers
+            cell.classList.add('date-cell');
+            // small stagger based on sequence
+            cell.style.animationDelay = `${seq * 32}ms`;
+            // use rAF chain to schedule pop without many timeouts
+            (function(c, s){
+              requestAnimationFrame(() => {
+                // next frame allow computed style to settle then add pop
+                requestAnimationFrame(() => c.classList.add('pop'));
+              });
+            })(cell, seq);
+            seq++;
 
             date++;
           }
@@ -334,42 +209,116 @@
       }
 
       table.appendChild(tbody);
-      calendarContainer.innerHTML = '';
-      calendarContainer.appendChild(table);
 
-      // Add click listeners to cells
-      calendarContainer.querySelectorAll('td').forEach(cell => {
+      // Attach click listeners for each date cell
+      table.querySelectorAll('td').forEach(cell => {
+        const dateNumber = cell.querySelector('.date-number');
+        if (!dateNumber) return;
         cell.addEventListener('click', () => {
+          console.log('calendar cell clicked:', dateNumber.textContent, month, year);
           if (cell.classList.contains('past-day')) return;
-          const date = cell.querySelector('.date-number');
           const entries = cell.querySelector('.entries');
-          if (date && entries) {
+          if (dateNumber && entries) {
             currentEntries = entries;
-            currentDate = date.textContent;
+            currentDate = dateNumber.textContent;
             eventInput.value = entries.textContent || '';
             fileInput.value = '';
             modalDate.textContent = `Event for ${monthNames[month]} ${currentDate}, ${year}`;
-            modal.style.display = 'flex';
+            // show modal with animation
+            showModal();
           }
         });
       });
+
+      return table;
     }
+
+    // Swap current calendar with new one using directional animation
+    function showCalendar(month, year, dir) {
+      const newTable = buildCalendar(month, year);
+      // dir: -1 = left (previous), +1 = right (next), 0 = none
+      if (!calendarContainer.firstElementChild) {
+        // initial
+        calendarContainer.appendChild(newTable);
+        return;
+      }
+      const old = calendarContainer.firstElementChild;
+      if (dir === 1) {
+        newTable.classList.add('anim-in-right');
+        old.classList.add('anim-out-left');
+        calendarContainer.appendChild(newTable);
+      } else if (dir === -1) {
+        newTable.classList.add('anim-in-left');
+        old.classList.add('anim-out-right');
+        calendarContainer.appendChild(newTable);
+      } else {
+        // no directional animation - simple replace with fadeInUp
+        newTable.style.animation = 'fadeInUp 300ms ease forwards';
+        calendarContainer.appendChild(newTable);
+        old.remove();
+        return;
+      }
+
+      // remove old after its animation ends
+      old.addEventListener('animationend', () => {
+        if (old && old.parentNode) old.parentNode.removeChild(old);
+      }, { once: true });
+    }
+
+    let previousFocus = null;
+    function showModal() {
+      console.log('showModal called');
+      previousFocus = document.activeElement;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden','false');
+  // do not disable body scrolling; keep overlay pointer-events none so background scroll works
+  modal.style.zIndex = 99999;
+      // ensure no leftover classes
+      eventDialog.classList.remove('animate-out');
+      // animate in
+      eventDialog.classList.add('animate-in');
+      // focus when animation finishes
+      eventDialog.addEventListener('animationend', function onEnd() {
+        eventDialog.removeEventListener('animationend', onEnd);
+        try { eventInput.focus(); } catch(e){}
+      });
+    }
+
+    function hideModal() {
+  modal.setAttribute('aria-hidden','true');
+      // animate out
+      eventDialog.classList.remove('animate-in');
+      eventDialog.classList.add('animate-out');
+      eventDialog.addEventListener('animationend', function onClose() {
+        eventDialog.removeEventListener('animationend', onClose);
+  modal.classList.remove('open');
+  try { if (previousFocus && previousFocus.focus) previousFocus.focus(); } catch(e){}
+      });
+    }
+
+    // close modal on Escape for robustness
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && modal.classList.contains('open')) {
+        hideModal();
+      }
+    });
 
     document.getElementById('prevMonthBtn').addEventListener('click', () => {
       viewMonth--;
       if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-      renderCalendar(viewMonth, viewYear);
+      showCalendar(viewMonth, viewYear, -1);
     });
     document.getElementById('nextMonthBtn').addEventListener('click', () => {
       viewMonth++;
       if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-      renderCalendar(viewMonth, viewYear);
+      showCalendar(viewMonth, viewYear, 1);
     });
+
     saveBtn.addEventListener('click', () => {
       if (currentEntries) currentEntries.textContent = eventInput.value;
-      modal.style.display = 'none';
+      hideModal();
     });
-    cancelBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    cancelBtn.addEventListener('click', () => { hideModal(); });
     fileInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (file && file.type === 'text/plain') {
@@ -378,11 +327,12 @@
         reader.readAsText(file);
       }
     });
-    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+    modal.addEventListener('click', e => { if (e.target === modal) hideModal(); });
 
     // initial render
-    renderCalendar(viewMonth, viewYear);
+    showCalendar(viewMonth, viewYear, 0);
   </script>
+  <script src="script.js"></script>
 
 </body>
 </html>

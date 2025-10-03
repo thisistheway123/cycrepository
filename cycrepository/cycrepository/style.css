@@ -69,11 +69,82 @@ main {
 .hero { padding: 60px 20px; }
 .hero-inner { max-width: 1100px; margin: 0 auto; display:flex; gap:30px; align-items:center; justify-content:space-between; }
 .hero-copy { flex:1; text-align:left; }
-.hero-title { font-size:2.6rem; margin-bottom:12px; }
+.hero-title { font-size:5.0rem; margin-bottom:12px;color:#464646;font:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif, sans-serif; font-weight:700; }
 .hero-sub { font-size:1.05rem; color:#334257; margin-bottom:18px; }
 .hero-ctas { display:flex; gap:12px; }
-.btn { display:inline-block; padding:10px 18px; border-radius:8px; background:#eee; color:#222; text-decoration:none; font-weight:700; }
-.btn.primary { background:linear-gradient(180deg,#ff9800,#fb8c00); color:#fff; }
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: #eee;
+  color: #222;
+  text-decoration: none;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden; /* RIPPLESSSSS */
+  transition: transform 220ms cubic-bezier(.2,.9,.3,1), box-shadow 220ms ease, background 400ms ease;
+  will-change: transform;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12), 0 0 0 4px rgba(255,152,0,0.12);
+  transform: translateY(-1px);
+}
+
+.btn:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn::after {
+  /* simple centered ripple on click */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: rgba(255,255,255,0.45);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 480ms cubic-bezier(.2,.9,.3,1), opacity 480ms ease;
+}
+
+.btn:active::after {
+  transform: translate(-50%, -50%) scale(14);
+  opacity: 0.0;
+  transition: transform 480ms cubic-bezier(.2,.9,.3,1), opacity 480ms ease;
+}
+
+.btn.primary {
+  background: linear-gradient(90deg, #ff9800 0%, #fb8c00 50%, #ffb74d 100%);
+  color: #fff;
+  background-size: 200% 100%;
+  transition: background-position 600ms ease, transform 220ms cubic-bezier(.2,.9,.3,1), box-shadow 220ms ease;
+}
+
+.btn.primary:hover {
+  background-position: 100% 0;
+  box-shadow: 0 12px 30px rgba(251,140,0,0.18);
+}
+
+/* Subtle breathing animation for primary when idle (small slow pulse) */
+.btn.primary.idle-pulse {
+  animation: pulseSlow 6s ease-in-out infinite;
+}
+
+@keyframes pulseSlow {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
+}
 .hero-visual { width:220px; }
 .mini-card { background:#fff; padding:16px; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
 .mini-card h3 { margin-bottom:6px; }
@@ -236,4 +307,94 @@ td:hover {
   text-align: center;
 }
 
-.menu-toggle:focus { outline: 3px solid rgba(255,152,0,0.25); border-radius:6px }
+menu-toggle:focus { outline: 3px solid rgba(255,152,0,0.25); border-radius:6px }
+
+/* Hide native scrollbars visually (but keep scrolling) */
+html { scrollbar-width: none; -ms-overflow-style: none; }
+body::-webkit-scrollbar { width: 0; height: 0; }
+
+/* Right-side custom scrollbar (track + thumb) */
+#scrollTrack {
+  position: fixed;
+  right: 8px;
+  top: 8px;
+  bottom: 8px;
+  width: 12px;
+  border-radius: 10px;
+  background: transparent; /* keep invisible track but clickable area */
+  z-index: 999999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none; /* start inert until shown */
+  opacity: 0;
+  transition: opacity 420ms cubic-bezier(.2,0.8,0.22,1);
+}
+
+/* visible state when user is active */
+#scrollTrack.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#scrollThumb {
+  width: 8px;
+  background: transparent; /* container only — inner element paints the gradient */
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  transform-origin: center top;
+  transition: transform 220ms cubic-bezier(.2,0.9,0.3,1), opacity 180ms ease;
+  opacity: 0.95;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.scrollThumbInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(180deg,#ff9800,#fb8c00);
+  box-shadow: inherit;
+  transform-origin: center top;
+  transition: transform 220ms cubic-bezier(.2,0.9,0.3,1);
+  will-change: transform;
+}
+
+/* squash visual: when thumb briefly compresses at top/bottom */
+.squash-top #scrollThumb, .squash-bottom #scrollThumb {
+  transition: transform 220ms cubic-bezier(.2,0.9,0.3,1);
+}
+
+/* subtle rebound by briefly scaling back to normal via a helper class toggled in JS if needed */
+.squash-rebound #scrollThumb {
+  transition: transform 420ms cubic-bezier(.2,0.8,0.22,1);
+}
+
+/* Back to top button (move slightly left of track to avoid overlap) */
+#backToTop {
+  position: fixed;
+  right: 30px;
+  bottom: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(180deg,#ffb74d,#fb8c00);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  transform: translateY(8px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 260ms cubic-bezier(.2,.9,.3,1), opacity 260ms ease;
+  z-index: 999999;
+}
+
+#backToTop.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+#backToTop:focus { outline: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 4px rgba(255,152,0,0.12); }
+
