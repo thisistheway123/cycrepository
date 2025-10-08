@@ -3,7 +3,7 @@
   <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cyc - Calendar</title>
+  <title>Calendar | Cyc</title>
   <link rel="stylesheet" href="style.css">
   <style>
     /* Calendar-specific overrides kept local */
@@ -11,10 +11,72 @@
   .today { background: #fff59d !important; color: #d32f2f !important; border: 2px solid #fbc02d !important; }
   /* Only apply predicted-period visuals when the cell is NOT also today */
   .predicted-period:not(.today) { background: rgba(255,200,200,0.9) !important; color: #7a0000 !important; border: 2px solid #ff8a80 !important; }
+  /* Mood badge shown for predicted period days */
+  .mood-badge {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    font-size: 1.05rem;
+    line-height: 1;
+    background: rgba(255,255,255,0.85);
+    padding: 2px 6px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    pointer-events: none;
+  }
+  .mood-badge.low { background: rgba(235, 87, 87, 0.95); color: #fff; }
+  .mood-badge.mid { background: rgba(255, 193, 7, 0.95); color: #222; }
+  .mood-badge.high { background: rgba(102, 187, 106, 0.95); color: #fff; }
+  /* Compact indicator for days that have notes to avoid layout warping */
+  .entries { position: relative; min-height: 18px; }
+  .entry-indicator {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    width: 10px;
+    height: 10px;
+    background: #ff6b6b;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .entry-indicator.has-text { background: #4caf50; }
+  /* Suggestions grouping styles */
+  .suggestion-section { margin-bottom: 8px; }
+  .suggestion-section h4 { margin: 6px 0; font-size: 0.95rem; }
+  .suggestion-item { display: block; }
     table { width: 90%; max-width: 800px; margin: 0 auto; }
     th { background: purple; color: white; }
     /* Animated calendar and cells */
-    .calendar-table { transform-origin: center top; }
+    .calendar-table { transform-origin: center top; border-collapse: collapse; border-spacing: 0; }
+    /* show dividers on individual calendar cells */
+    .calendar-table th, .calendar-table td {
+      border: 1px solid rgba(0,0,0,0.12);
+      padding: 10px;
+      vertical-align: top;
+      min-width: 86px;
+      min-height: 72px;
+      position: relative;
+      background-clip: padding-box;
+    }
+    .calendar-table thead th { background: #6a1b9a; color: #fff; }
+  /* Base dialog styling (moved out of inline styles so theme classes can override) */
+  #eventDialog { padding: 0; border-radius: 12px; width: 420px; max-width: 92vw; height: 520px; margin: auto; position: relative; box-shadow: 0 18px 50px rgba(0,0,0,0.18); transition: background 360ms ease, color 360ms ease, transform 220ms cubic-bezier(.2,.9,.3,1); display:flex; flex-direction:column; overflow: hidden; }
+  /* scrollable body inside dialog so dialog size remains fixed */
+  #eventDialog .dialog-body { padding: 18px; flex: 1 1 auto; overflow: auto; }
+  /* footer area remains fixed height */
+  #eventDialog .dialog-footer { padding: 12px 18px; border-top: 1px solid rgba(0,0,0,0.04); display:flex; justify-content:flex-end; gap:8px; }
+    /* Modal color variants to reflect the clicked day's state */
+    #eventDialog.modal-default { background: #ffffff; color: #222; border-left: 6px solid rgba(0,0,0,0.06); }
+    #eventDialog.modal-today { background: linear-gradient(180deg,#fffef2,#fff7c7); color: #333; border-left: 6px solid #fbc02d; }
+    #eventDialog.modal-predicted { background: linear-gradient(180deg,#fff6f7,#ffecec); color: #3b0101; border-left: 6px solid #ff8a80; }
+    /* make dialog content contrast-friendly */
+    #eventDialog h3 { margin-top: 0; margin-bottom: 8px; }
+      /* compact button variant to reuse .btn styles but smaller */
+      .btn.small { padding: 6px 10px; border-radius: 8px; font-size: 0.9rem; }
+      /* make suggestions area compact and scrollable to limit overall page scrolling */
+      #suggestions { max-height: 36vh; overflow: auto; gap:6px; padding-right:6px; }
+      /* reduce suggestion item detail size to minimize height */
+      .suggestion-item div { line-height: 1.15; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes slideInFromRight { from { opacity:0; transform: translateX(18px); } to { opacity:1; transform: translateX(0);} }
     @keyframes slideOutToLeft { from { opacity:1; transform: translateX(0);} to { opacity:0; transform: translateX(-18px);} }
@@ -50,8 +112,9 @@
   /* Allow page scroll while modal is open by letting pointer-events pass through the backdrop.
     Dialog itself remains interactive. Backdrop clicks will NOT close the modal (use Cancel/Escape).
   */
+  /* When hidden the modal overlay doesn't capture events; when open the overlay captures clicks so clicking backdrop can close it and prevents clicks on the calendar cells. */
   #eventModal { pointer-events: none; }
-  #eventModal.open { pointer-events: none; }
+  #eventModal.open { pointer-events: auto; }
   #eventModal.open #eventDialog { pointer-events: auto; max-height: 80vh; overflow: auto; }
   </style>
 </head>
@@ -95,13 +158,24 @@
     <div>© 2025 Cyc. All rights reserved.</div>
   </footer>
   <div id="eventModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;" aria-hidden="true" role="dialog" aria-modal="true">
-    <div id="eventDialog" style="background:#fff; padding:24px; border-radius:8px; min-width:300px; max-width:90vw; margin:auto; position:relative;">
+    <div id="eventDialog">
+      <div class="dialog-body">
       <h3 id="modalDate"></h3>
-      <input id="eventInput" type="text" placeholder="Enter event..." style="width:100%; margin-bottom:10px; padding:6px;" />
-      <input id="fileInput" type="file" accept=".txt" style="margin-bottom:10px;" />
-      <div style="margin-bottom:10px; color:#888; font-size:0.9em;">Or select a .txt file to display its contents.</div>
-      <button id="saveEventBtn">Save</button>
-      <button id="cancelEventBtn">Cancel</button>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+        <input id="eventInput" type="text" placeholder="Add custom item..." style="flex:1; padding:8px;" />
+        <button id="addCustomBtn" class="btn small">Add</button>
+      </div>
+      <div id="itemList" style="margin-top:6px; font-size:0.95rem; color:#222; max-height:28vh; overflow:auto; padding-right:6px;">
+        <!-- per-date items will appear here -->
+      </div>
+      <div id="suggestions" style="margin-top:12px; text-align:left; font-size:0.95rem; color:#222;">
+        <!-- suggestions (foods / drinks / actions) will be injected here -->
+      </div>
+      </div>
+      <div class="dialog-footer">
+        <button id="cancelEventBtn" class="btn">Cancel</button>
+        <button id="saveEventBtn" class="btn primary">Save</button>
+      </div>
     </div>
   </div>
   <script>
@@ -114,15 +188,90 @@
     const calendarTitle = document.getElementById('calendarTitle');
     const calendarContainer = document.getElementById('calendarContainer');
 
-    const modal = document.getElementById('eventModal');
-    const eventDialog = document.getElementById('eventDialog');
-    const eventInput = document.getElementById('eventInput');
-    const fileInput = document.getElementById('fileInput');
+  const modal = document.getElementById('eventModal');
+  const eventDialog = document.getElementById('eventDialog');
+  const eventInput = document.getElementById('eventInput');
     const saveBtn = document.getElementById('saveEventBtn');
     const cancelBtn = document.getElementById('cancelEventBtn');
     const modalDate = document.getElementById('modalDate');
     let currentEntries = null;
     let currentDate = null;
+    // current modal ISO date (YYYY-MM-DD)
+    let currentModalISO = null;
+
+    // storage helpers for calendar entries
+    function _loadStore() {
+      try { return JSON.parse(localStorage.getItem('calendarEntries') || '{}'); } catch(e){ return {}; }
+    }
+    function _saveStore(s) { try { localStorage.setItem('calendarEntries', JSON.stringify(s)); } catch(e){} }
+    function getItemsForISO(iso) { const s = _loadStore(); return s[iso] ? s[iso].slice() : []; }
+    function setItemsForISO(iso, items) { const s = _loadStore(); s[iso] = items; _saveStore(s); }
+    function addItemForISO(iso, title) { if (!title || !title.trim()) return; const items = getItemsForISO(iso); items.push({ title: title.trim(), created: Date.now() }); setItemsForISO(iso, items); return items; }
+    function removeItemForISO(iso, idx) { const items = getItemsForISO(iso); if (idx < 0 || idx >= items.length) return items; items.splice(idx,1); setItemsForISO(iso, items); return items; }
+
+    // add or remove visual indicator(s) for a given ISO date across the calendar
+    function updateIndicatorForISO(iso) {
+      // find all entries divs with matching dataset.iso and update their indicator
+      document.querySelectorAll('.entries').forEach(container => {
+        if (container.dataset && container.dataset.iso === iso) {
+          const items = getItemsForISO(iso);
+          let ind = container.querySelector('.entry-indicator');
+          if (items && items.length > 0) {
+            if (!ind) {
+              ind = document.createElement('div'); ind.className = 'entry-indicator has-text'; container.appendChild(ind);
+            } else {
+              ind.classList.add('has-text');
+            }
+          } else {
+            if (ind && ind.parentNode) ind.parentNode.removeChild(ind);
+          }
+        }
+      });
+    }
+
+    // render modal's item list (with delete buttons)
+    function renderModalItemList(items) {
+      const container = document.getElementById('itemList');
+      container.innerHTML = '';
+      if (!items || items.length === 0) {
+        const empty = document.createElement('div'); empty.style.color = '#666'; empty.textContent = 'No items yet'; container.appendChild(empty); return;
+      }
+      items.forEach((it, i) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.alignItems = 'center'; row.style.padding = '6px 4px'; row.style.borderBottom = '1px solid rgba(0,0,0,0.04)';
+        const left = document.createElement('div'); left.textContent = it.title; left.style.textAlign = 'left'; left.style.flex = '1'; left.style.paddingRight = '8px';
+        const del = document.createElement('button'); del.className = 'btn small'; del.textContent = 'Delete'; del.addEventListener('click', () => {
+          const updated = removeItemForISO(currentModalISO, i);
+          renderModalItemList(updated);
+          // update indicator on calendar cell(s)
+          updateIndicatorForISO(currentModalISO);
+          // re-render suggestions so the removed title becomes available again
+          try {
+            const entriesDiv = document.querySelector(`.entries[data-iso="${currentModalISO}"]`);
+            const isPred = entriesDiv && entriesDiv.parentNode && entriesDiv.parentNode.classList.contains('predicted-period');
+            renderSuggestions(new Date(currentModalISO), isPred);
+          } catch(e){}
+        });
+        row.appendChild(left); row.appendChild(del); container.appendChild(row);
+      });
+    }
+
+    // add custom button wiring
+    document.getElementById('addCustomBtn').addEventListener('click', () => {
+      if (!currentModalISO) return;
+      const val = (eventInput.value || '').trim();
+      if (!val) return;
+      const updated = addItemForISO(currentModalISO, val);
+      renderModalItemList(updated);
+      eventInput.value = '';
+      updateIndicatorForISO(currentModalISO);
+      // re-render suggestions to hide any suggestion with the same title
+      try {
+        const entriesDiv = document.querySelector(`.entries[data-iso="${currentModalISO}"]`);
+        const isPred = entriesDiv && entriesDiv.parentNode && entriesDiv.parentNode.classList.contains('predicted-period');
+        renderSuggestions(new Date(currentModalISO), isPred);
+      } catch(e){}
+    });
 
     // build a table element for the given month/year (doesn't attach)
     function buildCalendar(month, year) {
@@ -145,10 +294,11 @@
       }
 
       const table = document.createElement('table');
-      table.className = 'calendar-table';
-      table.setAttribute('bgcolor','lightgrey');
-      table.setAttribute('cellspacing','21');
-      table.setAttribute('cellpadding','21');
+  table.className = 'calendar-table';
+  table.setAttribute('bgcolor','lightgrey');
+  // reduce default cell spacing so CSS borders are visible
+  table.setAttribute('cellspacing','0');
+  table.setAttribute('cellpadding','0');
 
       const thead = document.createElement('thead');
       const headRow = document.createElement('tr');
@@ -176,10 +326,54 @@
             cell.appendChild(dateDiv);
             cell.appendChild(entriesDiv);
 
-            // mark predicted period
+            // mark predicted period and show mood indicator
             const cellDateObj = new Date(year, month, date);
-            if (isPredictedPeriod(cellDateObj)) cell.classList.add('predicted-period');
+            // compute period index (day in cycle) and period length if available
+            let dayIndex = null;
+            let periodLen = null;
+            if (menstrualData && menstrualData.lastStart) {
+              const cycle = parseInt(menstrualData.cycleLength,10) || 28;
+              const period = parseInt(menstrualData.periodLength,10) || 5;
+              const last = new Date(menstrualData.lastStart + 'T00:00:00');
+              const diff = Math.floor((cellDateObj - last) / msPerDay);
+              const mod = ((diff % cycle) + cycle) % cycle;
+              if (mod >= 0 && mod < period) {
+                dayIndex = mod; periodLen = period;
+                cell.classList.add('predicted-period');
+              }
+            }
+            // If this day is within predicted period, add a small mood badge
+            if (dayIndex !== null) {
+              // map dayIndex -> mood strength
+              const pos = (periodLen && periodLen > 1) ? (dayIndex / (periodLen - 1)) : 0;
+              // simple heuristic: earlier days tend toward lower mood, later days gradually improve
+              // compute a score from 1..-1 where 1 is best mood, -1 worst
+              const score = 1 - 2 * pos; // 1 -> -1 across the span
+              let emoji = '😐';
+              let cls = 'mid';
+              let label = 'Neutral mood expected';
+              if (score >= 0.5) { emoji = '🙂'; cls = 'high'; label = 'Positive/relieved'; }
+              else if (score >= 0.05) { emoji = '😌'; cls = 'mid'; label = 'Okay/steady'; }
+              else if (score >= -0.25) { emoji = '😕'; cls = 'mid'; label = 'Low energy'; }
+              else { emoji = '😢'; cls = 'low'; label = 'Low mood likely'; }
+              const badge = document.createElement('div');
+              badge.className = `mood-badge ${cls}`;
+              badge.textContent = emoji;
+              badge.title = `Predicted period day ${dayIndex + 1}/${periodLen}: ${label}`;
+              cell.appendChild(badge);
+            }
 
+            // attach ISO identifier and restore compact indicator if there are stored items for this date
+            const thisISO = cellDateObj.toISOString().slice(0,10);
+            entriesDiv.dataset.iso = thisISO;
+            (function(iso, container){
+              const items = getItemsForISO(iso);
+              if (items && items.length > 0) {
+                const ind = document.createElement('div');
+                ind.className = 'entry-indicator has-text';
+                container.appendChild(ind);
+              }
+            })(thisISO, entriesDiv);
             // mark past/today
             if (year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth()) || (year === today.getFullYear() && month === today.getMonth() && date < today.getDate())) {
               cell.classList.add('past-day');
@@ -215,15 +409,29 @@
         const dateNumber = cell.querySelector('.date-number');
         if (!dateNumber) return;
         cell.addEventListener('click', () => {
+          if (modal.classList.contains('open')) return; // ignore clicks while modal is open
           console.log('calendar cell clicked:', dateNumber.textContent, month, year);
           if (cell.classList.contains('past-day')) return;
           const entries = cell.querySelector('.entries');
-          if (dateNumber && entries) {
+            if (dateNumber && entries) {
             currentEntries = entries;
             currentDate = dateNumber.textContent;
-            eventInput.value = entries.textContent || '';
-            fileInput.value = '';
+            // compute ISO and set current modal date
+            const iso = new Date(year, month, Number(currentDate)).toISOString().slice(0,10);
+            currentModalISO = iso;
+            modal.dataset.date = iso;
+            // render stored items into modal list
+            const items = getItemsForISO(iso);
+            renderModalItemList(items);
+            // render contextual suggestions for this date (foods/drinks/actions)
+            const dateObj = new Date(year, month, Number(currentDate));
+            try { renderSuggestions(dateObj, cell.classList.contains('predicted-period')); } catch(e){ console.warn('renderSuggestions failed', e); }
             modalDate.textContent = `Event for ${monthNames[month]} ${currentDate}, ${year}`;
+            // set modal visual according to cell state
+            eventDialog.classList.remove('modal-default','modal-today','modal-predicted');
+            if (cell.classList.contains('today')) eventDialog.classList.add('modal-today');
+            else if (cell.classList.contains('predicted-period')) eventDialog.classList.add('modal-predicted');
+            else eventDialog.classList.add('modal-default');
             // show modal with animation
             showModal();
           }
@@ -315,18 +523,109 @@
     });
 
     saveBtn.addEventListener('click', () => {
-      if (currentEntries) currentEntries.textContent = eventInput.value;
+      // just close modal; items are saved immediately on add/delete
       hideModal();
     });
     cancelBtn.addEventListener('click', () => { hideModal(); });
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file && file.type === 'text/plain') {
-        const reader = new FileReader();
-        reader.onload = evt => { eventInput.value = evt.target.result; };
-        reader.readAsText(file);
+    // compute suggestions for a date: foods, drinks, and actions including pain-relief.
+    function computeSuggestionsForDate(dateObj, isPredictedPeriod) {
+      // Basic contextual rules – can be extended or replaced with richer data.
+      const suggestions = [];
+      // general comfort foods
+      suggestions.push({ type: 'food', title: 'Warm soup', details: 'Easy on the stomach, comforting and hydrating.' });
+      suggestions.push({ type: 'food', title: 'Bananas', details: 'High in potassium and gentle on digestion.' });
+      suggestions.push({ type: 'drink', title: 'Ginger tea', details: 'Helps with nausea and cramping.' });
+      suggestions.push({ type: 'drink', title: 'Warm water with lemon', details: 'Hydrating and soothing.' });
+      suggestions.push({ type: 'action', title: 'Gentle stretching', details: 'Light movement can ease cramps and improve mood.' });
+      suggestions.push({ type: 'action', title: 'Heat pack', details: 'Apply to lower abdomen for 15–20 minutes for pain relief.' });
+      suggestions.push({ type: 'action', title: 'Rest and nap', details: 'Short rests often help energy and mood.' });
+      // If predicted period, prioritize pain-relief and magnesium-rich foods
+      if (isPredictedPeriod) {
+        suggestions.unshift({ type: 'action', title: 'Pain reliever (if appropriate)', details: 'Ibuprofen or acetaminophen can help — follow dosing instructions.' });
+        suggestions.unshift({ type: 'food', title: 'Dark chocolate (small)', details: 'May improve mood and contains magnesium.' });
+        suggestions.push({ type: 'food', title: 'Yogurt', details: 'Protein and probiotics; gentle choice.' });
       }
-    });
+      // simple day-of-week variations (weekend = indulgence; weekday = lighter)
+      const dow = dateObj.getDay();
+      if (dow === 0 || dow === 6) { // weekend
+        suggestions.push({ type: 'food', title: 'Comfort brunch', details: 'Pancakes, eggs, or your favorite leisurely meal.' });
+      } else {
+        suggestions.push({ type: 'food', title: 'Simple salad or wrap', details: 'Quick, light, and energizing.' });
+      }
+      return suggestions;
+    }
+
+    function renderSuggestions(dateObj, isPredictedPeriod) {
+      const container = document.getElementById('suggestions');
+      if (!container) return;
+      const list = computeSuggestionsForDate(dateObj, !!isPredictedPeriod);
+      // filter out suggestions that are already added for this date
+      const iso = dateObj.toISOString().slice(0,10);
+      const existing = getItemsForISO(iso).map(i => i.title);
+      container.innerHTML = '';
+      const header = document.createElement('div');
+      header.style.fontWeight = '600';
+      header.style.marginBottom = '8px';
+      header.textContent = isPredictedPeriod ? 'Suggested for predicted period days' : 'Suggestions';
+      container.appendChild(header);
+
+      // group by type
+  const foods = list.filter(i => (i.type === 'food' || i.type === 'drink') && !existing.includes(i.title));
+  const remedies = list.filter(i => i.type === 'action' && !existing.includes(i.title));
+
+      function renderSection(titleText, items) {
+        if (!items || items.length === 0) return;
+        const sec = document.createElement('div');
+        sec.className = 'suggestion-section';
+        const h = document.createElement('h4');
+        h.textContent = titleText;
+        sec.appendChild(h);
+        items.forEach(item => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'suggestion-item';
+          itemDiv.style.padding = '8px 6px';
+          itemDiv.style.borderRadius = '6px';
+          itemDiv.style.marginBottom = '6px';
+          itemDiv.style.background = 'rgba(250,250,250,0.9)';
+          itemDiv.style.border = '1px solid #eee';
+          const title = document.createElement('div');
+          title.textContent = item.title;
+          title.style.fontWeight = '600';
+          const details = document.createElement('div');
+          details.textContent = item.details;
+          details.style.fontSize = '0.9rem';
+          details.style.color = '#444';
+          details.style.marginTop = '4px';
+          const addBtn = document.createElement('button');
+          addBtn.textContent = 'Add';
+          addBtn.className = 'btn small';
+          addBtn.style.float = 'right';
+          addBtn.style.marginLeft = '8px';
+          addBtn.addEventListener('click', () => {
+            // Persist the suggestion as an item for the current modal date
+            if (!currentModalISO) return;
+            const updated = addItemForISO(currentModalISO, item.title);
+            renderModalItemList(updated);
+            updateIndicatorForISO(currentModalISO);
+            // re-render suggestions for this date to remove the added item
+            try {
+              const entriesDiv = document.querySelector(`.entries[data-iso="${currentModalISO}"]`);
+              const isPred = entriesDiv && entriesDiv.parentNode && entriesDiv.parentNode.classList.contains('predicted-period');
+              renderSuggestions(new Date(currentModalISO), isPred);
+            } catch(e){}
+          });
+          itemDiv.appendChild(addBtn);
+          itemDiv.appendChild(title);
+          itemDiv.appendChild(details);
+          sec.appendChild(itemDiv);
+        });
+        container.appendChild(sec);
+      }
+
+      renderSection('Foods & Drinks', foods);
+      renderSection('Remedies & Actions', remedies);
+    }
+
     modal.addEventListener('click', e => { if (e.target === modal) hideModal(); });
 
     // initial render

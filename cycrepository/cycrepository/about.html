@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyc - Home</title>
+  <title>About | Cyc</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <nav class="nav-bar">
-      <a href="index.html" class="logo" aria-label="ts website home">
-        <img src="cyclogo (1) (1).png" alt="ts logo" class="logo-img">
+      <a href="about.html" class="logo" aria-label="Cyc about">
+        <img src="cyclogo (1) (1).png" alt="Cyc logo" class="logo-img">
       </a>
       <div class="nav-links">
         <a href="index.html">Home</a>
@@ -18,13 +18,33 @@
         <a href="calendar.html">Calendar</a>
       </div>
       <div id="clock-header" class="clock-header" aria-hidden="false"></div>
-      <button class="menu-toggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      <button class="menu-toggle" aria-label="Toggle menu" aria-expanded="false">stress button</button>
     </nav>
   </header>
 
   <main>
-    <h1 class="fade-in">ts website so amazing</h1>
-    <p class="slide-in">ts navigation so peak</p>
+    <div class="hero">
+      <div class="hero-inner">
+        <div class="hero-copy">
+        <section class="features">
+      <h2 class="section-title">Features</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>Calendar</h3>
+          <p>Navigate months, add notes, or import text files into any day.</p>
+        </div>
+        <div class="feature">
+          <h3>Responsive</h3>
+          <p>Works across desktop and mobile with a small, clean layout.</p>
+        </div>
+        <div class="feature">
+          <h3>Simple</h3>
+          <p>Minimal dependencies — just HTML, CSS and a touch of JavaScript.</p>
+        </div>
+      </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -38,10 +58,91 @@
     setInterval(updateClockHeader, 1000);
     updateClockHeader();
   </script>
-  <script src="script.js"></script>
   <footer>
-    <p>© 2025 ts website again lmao</p>
+    <p>© 2025 Cyc Congressional App Challenge</p>
   </footer>
+
+  <script>
+    // tiny helper to show today in the hero
+    (function(){
+      const d = new Date();
+      const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+      const el = document.getElementById('mini-today');
+      if (el) el.textContent = d.toLocaleDateString(undefined, opts);
+    })();
+  </script>
+  <!-- Menstrual survey modal -->
+  <div id="surveyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:2000;">
+    <div style="background:#fff; padding:20px; border-radius:8px; max-width:420px; width:90%;">
+      <h3>Quick survey to improve cycle predictions</h3>
+      <label>Average cycle length (days): <input id="cycleLength" type="number" min="18" max="45" value="28" /></label>
+      <br/>
+      <label>Average period duration (days): <input id="periodLength" type="number" min="2" max="10" value="5" /></label>
+      <br/>
+      <label>Last period start date: <input id="lastStart" type="date" /></label>
+      <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+        <button id="skipSurvey" class="btn">Skip</button>
+        <button id="saveSurvey" class="btn primary">Save & Open Calendar</button>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <script>
+  const openCalendarBtn = document.getElementById('openCalendarBtn');
+    const surveyModal = document.getElementById('surveyModal');
+    const saveSurvey = document.getElementById('saveSurvey');
+    const skipSurvey = document.getElementById('skipSurvey');
+
+    function hasSurveyData(){
+      return !!localStorage.getItem('menstrualData');
+    }
+
+    function prefillSurvey() {
+      const raw = localStorage.getItem('menstrualData');
+      if (!raw) return;
+      try {
+        const d = JSON.parse(raw);
+        if (d.cycleLength) document.getElementById('cycleLength').value = d.cycleLength;
+        if (d.periodLength) document.getElementById('periodLength').value = d.periodLength;
+        if (d.lastStart) document.getElementById('lastStart').value = d.lastStart;
+      } catch(e){}
+    }
+
+    openCalendarBtn.addEventListener('click', () => {
+      if (hasSurveyData()) {
+        location.href = 'calendar.html';
+      } else {
+        prefillSurvey();
+        surveyModal.style.display = 'flex';
+        document.getElementById('cycleLength').focus();
+      }
+    });
+
+    
+
+  // Edit Survey button always opens modal for editing
+    const editBtn = document.getElementById('editSurveyBtn');
+    if (editBtn) editBtn.addEventListener('click', () => { prefillSurvey(); surveyModal.style.display = 'flex'; document.getElementById('cycleLength').focus(); });
+
+    // If user arrived with ?editSurvey=1, open modal after DOM content loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      if (location.search.includes('editSurvey=1')) { prefillSurvey(); surveyModal.style.display = 'flex'; document.getElementById('cycleLength').focus(); }
+    });
+
+    saveSurvey.addEventListener('click', () => {
+      const cycle = parseInt(document.getElementById('cycleLength').value,10) || 28;
+      const period = parseInt(document.getElementById('periodLength').value,10) || 5;
+      const last = document.getElementById('lastStart').value || null;
+      const data = { cycleLength: cycle, periodLength: period, lastStart: last };
+      localStorage.setItem('menstrualData', JSON.stringify(data));
+      surveyModal.style.display = 'none';
+      location.href = 'calendar.html';
+    });
+
+    skipSurvey.addEventListener('click', () => {
+      surveyModal.style.display = 'none';
+      location.href = 'calendar.html';
+    });
+  </script>
 </body>
 </html>
-
