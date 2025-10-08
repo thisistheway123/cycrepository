@@ -442,7 +442,9 @@
     }
 
     // Swap current calendar with new one using directional animation
+    let isTransitioning = false;
     function showCalendar(month, year, dir) {
+      if (isTransitioning) return;
       const newTable = buildCalendar(month, year);
       // dir: -1 = left (previous), +1 = right (next), 0 = none
       if (!calendarContainer.firstElementChild) {
@@ -452,10 +454,12 @@
       }
       const old = calendarContainer.firstElementChild;
       if (dir === 1) {
+        isTransitioning = true;
         newTable.classList.add('anim-in-right');
         old.classList.add('anim-out-left');
         calendarContainer.appendChild(newTable);
       } else if (dir === -1) {
+        isTransitioning = true;
         newTable.classList.add('anim-in-left');
         old.classList.add('anim-out-right');
         calendarContainer.appendChild(newTable);
@@ -470,6 +474,7 @@
       // remove old after its animation ends
       old.addEventListener('animationend', () => {
         if (old && old.parentNode) old.parentNode.removeChild(old);
+        isTransitioning = false;
       }, { once: true });
     }
 
