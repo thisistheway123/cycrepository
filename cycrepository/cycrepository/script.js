@@ -245,7 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const dt = Math.max(1, now - lastTimestamp);
   const dy = scrollTop - lastScrollTop;
   lastDy = dy;
-  const instantV = Math.abs(dy) / dt; // px per ms
+  const MAX_VELOCITY = 2.0; // cap to avoid extreme spikes (≈2000 px/s)
+  const clampedV = Math.min(Math.abs(dy) / dt, MAX_VELOCITY);
+  lastVelocity = (velocitySmoothing * lastVelocity) + ((1 - velocitySmoothing) * clampedV);
       // exponential smoothing
       lastVelocity = (velocitySmoothing * lastVelocity) + ((1 - velocitySmoothing) * instantV);
       lastTimestamp = now;

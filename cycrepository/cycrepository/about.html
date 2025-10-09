@@ -31,7 +31,7 @@
       <div class="feature-grid">
         <div class="feature">
           <h3>Calendar</h3>
-          <p>Navigate months, add notes, or import text files into any day.</p>
+          <p>Navigate months, get food recommendations, predict cycles.</p>
         </div>
         <div class="feature">
           <h3>Responsive</h3>
@@ -63,7 +63,6 @@
   </footer>
 
   <script>
-    // tiny helper to show today in the hero
     (function(){
       const d = new Date();
       const opts = { weekday: 'long', month: 'long', day: 'numeric' };
@@ -71,7 +70,6 @@
       if (el) el.textContent = d.toLocaleDateString(undefined, opts);
     })();
   </script>
-  <!-- Menstrual survey modal -->
   <div id="surveyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:2000;">
     <div style="background:#fff; padding:20px; border-radius:8px; max-width:420px; width:90%;">
       <h3>Quick survey to improve cycle predictions</h3>
@@ -118,13 +116,9 @@
       }
     });
 
-    
-
-  // Edit Survey button always opens modal for editing
     const editBtn = document.getElementById('editSurveyBtn');
     if (editBtn) editBtn.addEventListener('click', () => { prefillSurvey(); surveyModal.style.display = 'flex'; document.getElementById('cycleLength').focus(); });
 
-    // If user arrived with ?editSurvey=1, open modal after DOM content loaded
     document.addEventListener('DOMContentLoaded', () => {
       if (location.search.includes('editSurvey=1')) { prefillSurvey(); surveyModal.style.display = 'flex'; document.getElementById('cycleLength').focus(); }
     });

@@ -21,7 +21,7 @@
       <button class="menu-toggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
     </nav>
   </header>
-
+</body>
   <main>
     <section class="hero">
       <div class="hero-inner">
@@ -60,7 +60,6 @@
   </footer>
 
   <script>
-    // tiny helper to show today in the hero
     (function(){
       const d = new Date();
       const opts = { weekday: 'long', month: 'long', day: 'numeric' };
@@ -68,7 +67,6 @@
       if (el) el.textContent = d.toLocaleDateString(undefined, opts);
     })();
   </script>
-  <!-- Menstrual survey modal -->
   <div id="surveyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:2000;">
     <div style="background:#fff; padding:20px; border-radius:8px; max-width:420px; width:90%;">
       <h3>Quick survey to improve cycle predictions</h3>
@@ -85,15 +83,16 @@
   </div>
   <script src="script.js"></script>
   <script>
-  const openCalendarBtn = document.getElementById('openCalendarBtn');
+    // Survey modal logic
+    const openCalendarBtn = document.getElementById('openCalendarBtn');
     const surveyModal = document.getElementById('surveyModal');
     const saveSurvey = document.getElementById('saveSurvey');
     const skipSurvey = document.getElementById('skipSurvey');
-
+    // Check if survey data exists in localStorage
     function hasSurveyData(){
       return !!localStorage.getItem('menstrualData');
     }
-
+    // Prefill survey inputs if data exists
     function prefillSurvey() {
       const raw = localStorage.getItem('menstrualData');
       if (!raw) return;
@@ -104,7 +103,7 @@
         if (d.lastStart) document.getElementById('lastStart').value = d.lastStart;
       } catch(e){}
     }
-
+    // Open calendar or survey modal on button click
     openCalendarBtn.addEventListener('click', () => {
       if (hasSurveyData()) {
         location.href = 'calendar.html';
@@ -116,16 +115,14 @@
     });
 
     
-
-  // Edit Survey button always opens modal for editing
+    // Edit Survey button always opens modal for editing
     const editBtn = document.getElementById('editSurveyBtn');
     if (editBtn) editBtn.addEventListener('click', () => { prefillSurvey(); surveyModal.style.display = 'flex'; document.getElementById('cycleLength').focus(); });
-
-    // If user arrived with ?editSurvey=1, open modal after DOM content loaded
     document.addEventListener('DOMContentLoaded', () => {
       if (location.search.includes('editSurvey=1')) { prefillSurvey(); surveyModal.style.display = 'flex'; document.getElementById('cycleLength').focus(); }
     });
 
+    // Save survey data and open calendar
     saveSurvey.addEventListener('click', () => {
       const cycle = parseInt(document.getElementById('cycleLength').value,10) || 28;
       const period = parseInt(document.getElementById('periodLength').value,10) || 5;
@@ -136,6 +133,7 @@
       location.href = 'calendar.html';
     });
 
+    // Skip survey and open calendar
     skipSurvey.addEventListener('click', () => {
       surveyModal.style.display = 'none';
       location.href = 'calendar.html';
